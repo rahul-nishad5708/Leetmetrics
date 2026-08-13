@@ -1,4 +1,5 @@
-document.addEventListener("DOMContentLoaded", function(){
+document.addEventListener("DOMContentLoaded", function () {
+
     const SearchButton = document.getElementById("search-btn");
     const usernameInput = document.getElementById("user-input");
 
@@ -11,113 +12,263 @@ document.addEventListener("DOMContentLoaded", function(){
     const easylabel = document.getElementById("easy-label");
     const mediumlabel = document.getElementById("medium-label");
     const hardlabel = document.getElementById("hard-label");
-    
+
     const cardStatsContainer = document.querySelector(".stats-cards");
 
 
-    function validateUserName(userName){
-        if (userName.trim() === ""){
+    // -------------------------------
+    // Validate Username
+    // -------------------------------
+    function validateUserName(userName) {
+
+        if (userName.trim() === "") {
             alert("Username can't be empty.");
             return false;
         }
 
-        const regex = /^[a-zA-Z0-9_-]{1,15}$/;
+        const regex = /^[a-zA-Z0-9_-]{1,30}$/;
         const isMatching = regex.test(userName);
 
-        if (!isMatching){
+        if (!isMatching) {
             alert("Invalid username.");
+            return false;
         }
 
-        return isMatching;
+        return true;
     }
 
-    function updateProgress(solved, total, label, circle){
-        const progressDegree = total > 0 ? (solved / total) * 100 : 0;
-        circle.style.setProperty("--progress", `${progressDegree}%`);
+
+    // -------------------------------
+    // Update Progress Circles
+    // -------------------------------
+    function updateProgress(solved, total, label, circle) {
+
+        const progressDegree = total > 0
+            ? (solved / total) * 100
+            : 0;
+
+        circle.style.setProperty(
+            "--progress",
+            `${progressDegree}%`
+        );
+
         label.textContent = `${solved} / ${total}`;
     }
 
-    function displayUserData(data){
-        const { 
-            totalQuestions, totalEasy, totalMedium, totalHard,
-            totalSolved, easySolved, mediumSolved, hardSolved,
-            acceptanceRate, contributionPoints
+
+    // -------------------------------
+    // Display User Data
+    // -------------------------------
+    function displayUserData(data) {
+
+        const {
+            totalQuestions,
+            totalSolved,
+            acceptanceRate,
+            byDifficulty
         } = data;
 
-        updateProgress(easySolved, totalEasy, easylabel, easyprogressCircle);
-        updateProgress(mediumSolved, totalMedium, mediumlabel, mediumprogressCircle);
-        updateProgress(hardSolved, totalHard, hardlabel, hardprogressCircle);
+
+        const easySolved = byDifficulty?.easy || 0;
+        const mediumSolved = byDifficulty?.medium || 0;
+        const hardSolved = byDifficulty?.hard || 0;
 
 
+        // Update progress circles
+        updateProgress(
+            easySolved,
+            Math.round(totalQuestions * 0.25),
+            easylabel,
+            easyprogressCircle
+        );
+
+        updateProgress(
+            mediumSolved,
+            Math.round(totalQuestions * 0.50),
+            mediumlabel,
+            mediumprogressCircle
+        );
+
+        updateProgress(
+            hardSolved,
+            Math.round(totalQuestions * 0.25),
+            hardlabel,
+            hardprogressCircle
+        );
+
+
+        // Cards
         const cardsData = [
-            {label: 'Overall Submissions:', value: totalSolved}, 
-            {label: 'Easy Submission:', value: easySolved},
-            {label: 'Medium Submission:', value: mediumSolved},
-            {label: 'Hard Submission:', value: hardSolved},
-            {label: 'Acceptance Rate:', value: `${acceptanceRate}%`},
-            {label: 'Contribution Points:', value: contributionPoints}
+
+            {
+                label: "Total Problems Solved",
+                value: totalSolved
+            },
+
+            {
+                label: "Easy Solved",
+                value: easySolved
+            },
+
+            {
+                label: "Medium Solved",
+                value: mediumSolved
+            },
+
+            {
+                label: "Hard Solved",
+                value: hardSolved
+            },
+
+            {
+                label: "Acceptance Rate",
+                value: `${acceptanceRate}%`
+            },
+
+            {
+                label: "Total Questions",
+                value: totalQuestions
+            }
+
         ];
 
-        console.log("Card data: ", cardsData);
 
-        // Clear old cards safely
+        console.log("Card data:", cardsData);
+
+
+        // Clear previous cards
         cardStatsContainer.innerHTML = "";
 
+
+        // Create cards
         cardsData.forEach(item => {
-            
+
             const card = document.createElement("div");
+
             card.classList.add("card");
 
+
             const title = document.createElement("h1");
+
             title.textContent = item.label;
 
+
             const value = document.createElement("p");
+
             value.textContent = item.value;
+
 
             card.appendChild(title);
             card.appendChild(value);
 
+
             cardStatsContainer.appendChild(card);
+
         });
+
     }
 
-    async function fetchUserDetails(userName){
+
+    // -------------------------------
+    // Fetch LeetCode User Details
+    // -------------------------------
+    async function fetchUserDetails(userName) {
+
         try {
+
             SearchButton.textContent = "Searching...";
             SearchButton.disabled = true;
 
-            const url = `https://leetcode-stats-api.herokuapp.com/${encodeURIComponent(userName)}`;
+
+            // NEW WORKING API
+            const url =
+                `https://leetcode-stats.tashif.codes/${encodeURIComponent(userName)}/stats`;
+
+
+            console.log("Fetching:", url);
+
+
             const response = await fetch(url);
 
-            if (!response.ok){
-                throw new Error("Unable to fetch the user details.");
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Unable to fetch user details. Status: ${response.status}`
+                );
+
             }
 
-            const data = await response.json();
-            console.log("User data: ", data);
 
-            if (data.status === "error") {
-                statsContainer.innerHTML = `<p>${data.message || "No data found."}</p>`;
-                return;
+            const result = await response.json();
+
+
+            console.log("API Response:", result);
+
+
+            // Check API status
+            if (result.status !== "success") {
+
+                throw new Error(
+                    result.message || "User not found."
+                );
+
             }
 
-            displayUserData(data);
+
+            // API data is inside result.data
+            displayUserData(result.data);
+
 
         } catch (error) {
-            statsContainer.innerHTML = `<p>Error: ${error.message}</p>`;
+
+            console.error("Error:", error);
+
+
+            statsContainer.innerHTML =
+                `<p>Error: ${error.message}</p>`;
+
         } finally {
+
             SearchButton.textContent = "Search";
             SearchButton.disabled = false;
+
         }
+
     }
 
-    SearchButton.addEventListener('click', function(){
-        const userName = usernameInput.value;
-        console.log("Logging username: ", userName);
 
-        if (validateUserName(userName)){
+    // -------------------------------
+    // Search Button
+    // -------------------------------
+    SearchButton.addEventListener("click", function () {
+
+        const userName = usernameInput.value.trim();
+
+
+        console.log("Searching username:", userName);
+
+
+        if (validateUserName(userName)) {
+
             fetchUserDetails(userName);
+
         }
+
+    });
+
+
+    // -------------------------------
+    // Enter Key Search
+    // -------------------------------
+    usernameInput.addEventListener("keypress", function (event) {
+
+        if (event.key === "Enter") {
+
+            SearchButton.click();
+
+        }
+
     });
 
 });
