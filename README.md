@@ -10,7 +10,7 @@ The project is built using **HTML, CSS, and JavaScript** and uses a LeetCode sta
 
 ![LeetMetrics Dashboard](assets/screenshot-home.png)
 
-> Add your project screenshot inside the `assets` folder and name it `leetmetrics-dashboard.png`.
+
 
 ---
 
