@@ -10,8 +10,6 @@ The project is built using **HTML, CSS, and JavaScript** and uses a LeetCode sta
 
 ![LeetMetrics Dashboard](assets/screenshot-home.png)
 
-
-
 ---
 
 ## ✨ Features
@@ -73,7 +71,7 @@ LeetMetrics/
 ```
 ## 📊 Project Status
 
-![Project Status](assets/stats.png)
+![Project Status](assets/screenshot-stats.png)
 
 ---
 
